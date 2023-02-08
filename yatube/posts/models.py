@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 
 
-LIMIT = 100
+LIMIT = 15
 
 User = get_user_model()
 

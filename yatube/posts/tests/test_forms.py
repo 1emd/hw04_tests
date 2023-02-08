@@ -1,9 +1,8 @@
-from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from ..forms import PostForm
-from ..models import Group, Post
+from posts.forms import PostForm
+from posts.models import Group, Post, User
 from .constants import (
     PROFILE_URL_NAME,
     POST_DETAIL_URL_NAME,
@@ -12,8 +11,6 @@ from .constants import (
 )
 
 PAGE_COUNT = 1
-
-User = get_user_model()
 
 
 class PostCreateFormTests(TestCase):
@@ -28,7 +25,7 @@ class PostCreateFormTests(TestCase):
         )
         cls.post = Post.objects.create(
             author=cls.user,
-            text='Тестовый текст поста',
+            text='Тестовый новый текст',
             group=cls.group,
         )
         cls.form = PostForm()
@@ -53,12 +50,9 @@ class PostCreateFormTests(TestCase):
             PROFILE_URL_NAME,
             kwargs={'username': self.post.author}))
         self.assertEqual(Post.objects.count(), posts_count + PAGE_COUNT)
-        self.assertTrue(
-            Post.objects.filter(
-                text='Тестовый текст',
-                group=self.group.id,
-            ).exists()
-        )
+        new_post = Post.objects.latest('id')
+        self.assertEqual(form_data['text'], new_post.text)
+        self.assertEqual(form_data['group'], new_post.group.id)
 
     def test_post_edit(self):
         """При отправке валидной формы со страницы редактирования поста
@@ -80,9 +74,6 @@ class PostCreateFormTests(TestCase):
                 POST_DETAIL_URL_NAME,
                 kwargs={'post_id': self.post.id})
         )
-        self.assertTrue(
-            Post.objects.filter(
-                text='Изменить текст.',
-                group=self.group.id,
-            ).exists()
-        )
+        new_post = Post.objects.latest('id')
+        self.assertEqual(form_data['text'], new_post.text)
+        self.assertEqual(form_data['group'], new_post.group.id)

@@ -1,10 +1,9 @@
 from http import HTTPStatus
 
-from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from ..models import Group, Post
+from posts.models import Group, Post, User
 from .constants import (
     INDEX_URL_NAME,
     GROUP_LIST_URL_NAME,
@@ -12,15 +11,13 @@ from .constants import (
     POST_DETAIL_URL_NAME,
     POST_EDIT_URL_NAME,
     POST_CREATE_URL_NAME,
-    INDEX_URL_ADDRESS,
-    GROUP_LIST_URL_ADDRESS,
-    PROFILE_URL_ADDRESS,
-    POST_DETAIL_URL_ADDRESS,
-    POST_EDIT_URL_ADDRESS,
-    POST_CREATE_URL_ADDRESS
+    INDEX_URL_TEMPLATE,
+    GROUP_LIST_URL_TEMPLATE,
+    PROFILE_URL_TEMPLATE,
+    POST_DETAIL_URL_TEMPLATE,
+    POST_EDIT_URL_TEMPLATE,
+    POST_CREATE_URL_TEMPLATE
 )
-
-User = get_user_model()
 
 
 class PostFormTests(TestCase):
@@ -43,6 +40,63 @@ class PostFormTests(TestCase):
             author=cls.user,
             group=cls.group,
         )
+        # status
+        cls.status_ok = HTTPStatus.OK
+        cls.status_found = HTTPStatus.FOUND
+        cls.status_not_found = HTTPStatus.NOT_FOUND
+        # index
+        cls.index_urls = reverse(INDEX_URL_NAME)
+        cls.index_template = INDEX_URL_TEMPLATE
+        # group_list
+        cls.group_list_url = reverse(
+            GROUP_LIST_URL_NAME,
+            kwargs={'slug': cls.group.slug}
+        )
+        cls.group_list_template = GROUP_LIST_URL_TEMPLATE
+        # profile
+        cls.profile_url = reverse(
+            PROFILE_URL_NAME,
+            kwargs={'username': cls.user}
+        )
+        cls.profile_template = PROFILE_URL_TEMPLATE
+        # post_detail
+        cls.post_detail_url = reverse(
+            POST_DETAIL_URL_NAME,
+            kwargs={'post_id': cls.post.id}
+        )
+        cls.post_detail_template = POST_DETAIL_URL_TEMPLATE
+        # post_edit
+        cls.post_edit_url = reverse(
+            POST_EDIT_URL_NAME,
+            kwargs={'post_id': cls.post.id}
+        )
+        cls.post_edit_template = POST_EDIT_URL_TEMPLATE
+        # post_create
+        cls.post_create_url = reverse(POST_CREATE_URL_NAME)
+        cls.post_create_template = POST_CREATE_URL_TEMPLATE
+        # unexisting_page
+        cls.unexisting_page_url = '/unexisting_page/'
+        cls.fake_template = ''
+        # tuples
+        cls.public_urls = {
+            (cls.index_urls, cls.index_template, cls.status_ok),
+            (cls.group_list_url, cls.group_list_template, cls.status_ok),
+            (cls.profile_url, cls.profile_template, cls.status_ok),
+            (cls.post_detail_url, cls.post_detail_template, cls.status_ok),
+            (cls.post_edit_url, cls.post_edit_template, cls.status_found),
+            (cls.post_create_url, cls.post_create_template, cls.status_found),
+        }
+        cls.unex_page = {
+            (cls.unexisting_page_url, cls.fake_template, cls.status_not_found)
+        }
+        cls.author_urls = {
+            (cls.post_edit_url, cls.post_edit_template, cls.status_ok),
+            (cls.post_create_url, cls.post_create_template, cls.status_ok),
+        }
+        cls.auth_urls = {
+            (cls.post_edit_url, cls.post_edit_template, cls.status_found),
+            (cls.post_create_url, cls.post_create_template, cls.status_ok),
+        }
 
     def setUp(self):
         self.guest = Client()
@@ -53,109 +107,28 @@ class PostFormTests(TestCase):
 
     def test_guest_user_urls_status_code(self):
         """Проверка доступности адресов для неавторизованного пользователя."""
-        templates_url_names = {
-            reverse(
-                INDEX_URL_NAME): HTTPStatus.OK,
-            reverse(
-                GROUP_LIST_URL_NAME,
-                kwargs={'slug': self.group.slug}): HTTPStatus.OK,
-            reverse(
-                PROFILE_URL_NAME,
-                kwargs={'username': self.user}): HTTPStatus.OK,
-            reverse(
-                POST_DETAIL_URL_NAME,
-                kwargs={'post_id': self.post.id}): HTTPStatus.OK,
-            reverse(
-                POST_EDIT_URL_NAME,
-                kwargs={'post_id': self.post.id}): HTTPStatus.FOUND,
-            reverse(
-                POST_CREATE_URL_NAME): HTTPStatus.FOUND,
-        }
-        for url, response_code in templates_url_names.items():
+        for url, _, response_code in self.public_urls and self.unex_page:
             with self.subTest(url=url):
                 status_code = self.guest.get(url).status_code
                 self.assertEqual(status_code, response_code)
 
     def test_author_user_urls_status_code(self):
         """Проверка доступности адресов для автора."""
-        templates_url_names = {
-            reverse(
-                INDEX_URL_NAME): HTTPStatus.OK,
-            reverse(
-                GROUP_LIST_URL_NAME,
-                kwargs={'slug': self.group.slug}): HTTPStatus.OK,
-            reverse(
-                PROFILE_URL_NAME,
-                kwargs={'username': self.user}): HTTPStatus.OK,
-            reverse(
-                POST_DETAIL_URL_NAME,
-                kwargs={'post_id': self.post.id}): HTTPStatus.OK,
-            reverse(
-                POST_EDIT_URL_NAME,
-                kwargs={'post_id': self.post.id}): HTTPStatus.OK,
-            reverse(
-                POST_CREATE_URL_NAME): HTTPStatus.OK,
-        }
-        for url, response_code in templates_url_names.items():
+        for url, _, response_code in self.author_urls:
             with self.subTest(url=url):
                 status_code = self.post_author.get(url).status_code
                 self.assertEqual(status_code, response_code)
 
     def test_authorized_user_urls_status_code(self):
         """Проверка доступности адресов для авторизованного пользователя."""
-        templates_url_names = {
-            reverse(
-                INDEX_URL_NAME): HTTPStatus.OK,
-            reverse(
-                GROUP_LIST_URL_NAME,
-                kwargs={'slug': self.group.slug}): HTTPStatus.OK,
-            reverse(
-                PROFILE_URL_NAME,
-                kwargs={'username': self.user}): HTTPStatus.OK,
-            reverse(
-                POST_DETAIL_URL_NAME,
-                kwargs={'post_id': self.post.id}): HTTPStatus.OK,
-            reverse(
-                POST_EDIT_URL_NAME,
-                kwargs={'post_id': self.post.id}): HTTPStatus.FOUND,
-            reverse(
-                POST_CREATE_URL_NAME): HTTPStatus.OK,
-        }
-        for url, response_code in templates_url_names.items():
+        for url, _, response_code in self.auth_urls:
             with self.subTest(url=url):
                 status_code = self.authorized_user.get(url).status_code
                 self.assertEqual(status_code, response_code)
 
-    def test_unexisting_page_return_404(self):
-        """Запрос к несуществующей странице вернёт ошибку 404."""
-        response1 = self.guest.get('/unexisting_page/')
-        response2 = self.authorized_user.get('/unexisting_page/')
-        response3 = self.post_author.get('/unexisting_page/')
-        self.assertEqual(response1.status_code, HTTPStatus.NOT_FOUND)
-        self.assertEqual(response2.status_code, HTTPStatus.NOT_FOUND)
-        self.assertEqual(response3.status_code, HTTPStatus.NOT_FOUND)
-
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
-        templates_url_names = {
-            reverse(
-                INDEX_URL_NAME): INDEX_URL_ADDRESS,
-            reverse(
-                GROUP_LIST_URL_NAME,
-                kwargs={'slug': self.group.slug}): GROUP_LIST_URL_ADDRESS,
-            reverse(
-                PROFILE_URL_NAME,
-                kwargs={'username': self.user}): PROFILE_URL_ADDRESS,
-            reverse(
-                POST_DETAIL_URL_NAME,
-                kwargs={'post_id': self.post.id}): POST_DETAIL_URL_ADDRESS,
-            reverse(
-                POST_EDIT_URL_NAME,
-                kwargs={'post_id': self.post.id}): POST_EDIT_URL_ADDRESS,
-            reverse(
-                POST_CREATE_URL_NAME): POST_CREATE_URL_ADDRESS,
-        }
-        for adress, template in templates_url_names.items():
+        for adress, template, _ in self.public_urls:
             with self.subTest(adress=adress):
                 response = self.post_author.get(adress)
                 self.assertTemplateUsed(response, template)
