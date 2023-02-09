@@ -40,62 +40,42 @@ class PostFormTests(TestCase):
             author=cls.user,
             group=cls.group,
         )
-        # status
-        cls.status_ok = HTTPStatus.OK
-        cls.status_found = HTTPStatus.FOUND
-        cls.status_not_found = HTTPStatus.NOT_FOUND
-        # index
         cls.index_urls = reverse(INDEX_URL_NAME)
-        cls.index_template = INDEX_URL_TEMPLATE
-        # group_list
         cls.group_list_url = reverse(
             GROUP_LIST_URL_NAME,
             kwargs={'slug': cls.group.slug}
         )
-        cls.group_list_template = GROUP_LIST_URL_TEMPLATE
-        # profile
         cls.profile_url = reverse(
             PROFILE_URL_NAME,
             kwargs={'username': cls.user}
         )
-        cls.profile_template = PROFILE_URL_TEMPLATE
-        # post_detail
         cls.post_detail_url = reverse(
             POST_DETAIL_URL_NAME,
             kwargs={'post_id': cls.post.id}
         )
-        cls.post_detail_template = POST_DETAIL_URL_TEMPLATE
-        # post_edit
         cls.post_edit_url = reverse(
             POST_EDIT_URL_NAME,
             kwargs={'post_id': cls.post.id}
         )
-        cls.post_edit_template = POST_EDIT_URL_TEMPLATE
-        # post_create
         cls.post_create_url = reverse(POST_CREATE_URL_NAME)
-        cls.post_create_template = POST_CREATE_URL_TEMPLATE
-        # unexisting_page
-        cls.unexisting_page_url = '/unexisting_page/'
-        cls.fake_template = ''
-        # tuples
         cls.public_urls = {
-            (cls.index_urls, cls.index_template, cls.status_ok),
-            (cls.group_list_url, cls.group_list_template, cls.status_ok),
-            (cls.profile_url, cls.profile_template, cls.status_ok),
-            (cls.post_detail_url, cls.post_detail_template, cls.status_ok),
-            (cls.post_edit_url, cls.post_edit_template, cls.status_found),
-            (cls.post_create_url, cls.post_create_template, cls.status_found),
+            (cls.index_urls, INDEX_URL_TEMPLATE, HTTPStatus.OK),
+            (cls.group_list_url, GROUP_LIST_URL_TEMPLATE, HTTPStatus.OK),
+            (cls.profile_url, PROFILE_URL_TEMPLATE, HTTPStatus.OK),
+            (cls.post_detail_url, POST_DETAIL_URL_TEMPLATE, HTTPStatus.OK),
+            (cls.post_edit_url, POST_EDIT_URL_TEMPLATE, HTTPStatus.FOUND),
+            (cls.post_create_url, POST_CREATE_URL_TEMPLATE, HTTPStatus.FOUND),
         }
         cls.unex_page = {
-            (cls.unexisting_page_url, cls.fake_template, cls.status_not_found)
+            ('/unexisting_page/', '', HTTPStatus.NOT_FOUND)
         }
         cls.author_urls = {
-            (cls.post_edit_url, cls.post_edit_template, cls.status_ok),
-            (cls.post_create_url, cls.post_create_template, cls.status_ok),
+            (cls.post_edit_url, POST_EDIT_URL_TEMPLATE, HTTPStatus.OK),
+            (cls.post_create_url, POST_CREATE_URL_TEMPLATE, HTTPStatus.OK),
         }
         cls.auth_urls = {
-            (cls.post_edit_url, cls.post_edit_template, cls.status_found),
-            (cls.post_create_url, cls.post_create_template, cls.status_ok),
+            (cls.post_edit_url, POST_EDIT_URL_TEMPLATE, HTTPStatus.FOUND),
+            (cls.post_create_url, POST_CREATE_URL_TEMPLATE, HTTPStatus.OK),
         }
 
     def setUp(self):
