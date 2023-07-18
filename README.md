@@ -55,7 +55,12 @@
   python3 manage.py migrate
   ```
 
-5. Запустите проект:
+5. Выполните тестирование:
+  ```
+  python3 manage.py test
+  ```
+
+6. Запустите проект:
   ```
   python3 manage.py runserver
   ```
